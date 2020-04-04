@@ -37,9 +37,27 @@ client.on('message', (message) => {
   const commandName = args.shift().toLowerCase();
   console.log(commandName, args);
 
+  // Check valid command
   if (!client.commands.has(commandName)) return;
   const command = client.commands.get(commandName);
 
+  // Check guide only command
+  if (command.guildOnly && message.channel.type !== 'text') {
+    return message.reply(
+      "You sneaky pan, I can't execute that command inside DMs!"
+    );
+  }
+
+  // Check command args
+  if (command.args && !args.length) {
+    let reply = `${message.author} you sala pan, I can't execute that with no arguments \n`;
+    if (command.usage) {
+      reply += `The proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
+    }
+    return message.channel.send(reply);
+  }
+
+  // Execute
   try {
     command.execute(message, args);
   } catch (error) {
