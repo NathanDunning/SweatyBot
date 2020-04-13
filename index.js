@@ -6,15 +6,16 @@ require('dotenv').config();
 
 // Command handling
 client.commands = new Discord.Collection();
-const commandFiles = fs
-  .readdirSync('./commands')
-  .filter((file) => file.endsWith('.js'));
 
-// Dynamic require + Setting/loading commands
-for (let file of commandFiles) {
-  let command = require(`./commands/${file}`);
-  client.commands.set(command.name, command);
+const load = dirs => {
+  const commands = fs.readdirSync(`./commands/${dirs}`).filter(file => file.endsWith('.js'))
+  for (let file of commands) {
+    let command = require(`./commands/${dirs}/${file}`)
+    client.commands.set(command.name, command)
+    if (command.alias) command.alias.forEach(alias => client.aliases.set(alias, command.name))
+  }
 }
+["miscellaneous", "moderation", "music"].forEach(f => load(f))
 
 // Initiate client
 client.once('ready', () => {
