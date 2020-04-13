@@ -1,10 +1,10 @@
 module.exports = {
-  name: 'memberCount',
+  name: 'membercount',
   description: 'Returns a count of the number of members in the server',
-  guideOnly: true,
+  guildOnly: true,
   execute(message) {
     message.channel.send(
       `Total Members in server: ${message.guild.memberCount}`
     );
-  }
+  },
 };
