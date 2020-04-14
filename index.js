@@ -1,25 +1,57 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const { prefix } = require('./config.json');
+const { testgeneral, testcommands } = require('./channels.js');
+const { ErelaClient, Utils } = require('erela.js');
 const fs = require('fs');
 require('dotenv').config();
 
 // Command handling
 client.commands = new Discord.Collection();
 
-const load = dirs => {
-  const commands = fs.readdirSync(`./commands/${dirs}`).filter(file => file.endsWith('.js'))
+// Dynamic loading
+const load = (dirs) => {
+  const commands = fs
+    .readdirSync(`./commands/${dirs}`)
+    .filter((file) => file.endsWith('.js'));
   for (let file of commands) {
-    let command = require(`./commands/${dirs}/${file}`)
-    client.commands.set(command.name, command)
-    if (command.alias) command.alias.forEach(alias => client.aliases.set(alias, command.name))
+    let command = require(`./commands/${dirs}/${file}`);
+    client.commands.set(command.name, command);
+    if (command.alias)
+      command.alias.forEach((alias) => client.aliases.set(alias, command.name));
   }
-}
-["miscellaneous", "moderation", "music"].forEach(f => load(f))
+};
+['miscellaneous', 'moderation', 'music'].forEach((f) => load(f));
+
+// Nodes for Erela.js
+const nodes = [{ host: 'localhost', port: 2333, password: 'youshallnotpass' }];
 
 // Initiate client
 client.once('ready', () => {
   console.log('Ready!');
+
+  // Initialise Erela client
+  client.music = new ErelaClient(client, nodes);
+  // Event Listener
+  client.music.on('nodeConnect', () => console.log('New node connected'));
+  client.music.on('nodeError', (error) =>
+    console.log(`Node error: ${error.message}`)
+  );
+  client.music.on('trackStart', ({ textChannel }, { title, duration }) =>
+    textChannel.send(
+      `Now playing: **${title}** \`${Utils.formatTime(duration, true)}\``
+    )
+  );
+  client.music.on('queueEnd', (player) => {
+    player.textChannel.send('Queue has ended.');
+    client.music.players.destroy(player.guild.id);
+  });
+
+  client.levels = new Map()
+    .set('none', 0.0)
+    .set('low', 0.1)
+    .set('medium', 0.15)
+    .set('high', 0.25);
 });
 
 client.login(process.env.DISCORD_CLIENT_TOKEN);
@@ -83,7 +115,7 @@ client.on('message', (message) => {
 
       // Execute
       try {
-        command.execute(message, args);
+        command.execute(client, message, args);
       } catch (error) {
         console.error(error);
         message.reply(`There was an error executing: ${command}`);
