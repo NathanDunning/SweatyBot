@@ -6,13 +6,9 @@ module.exports = {
   description: 'Play a song/playlist or search for a song from Youtube.',
   aliases: ['p'],
   guildOnly: true,
+  args: true,
   usage: '[command name] [youtube URL]',
   async execute(client, message, args) {
-    // Args Check
-    if (!args.length) {
-      return message.reply('What am I supposed to play?');
-    }
-
     // Check user is in voice channel
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel) {

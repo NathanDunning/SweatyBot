@@ -3,6 +3,7 @@ module.exports = {
     name: 'seek',
     description: 'Set track to given time',
     guildOnly: true,
+    args: true,
     usage: '[command name] [mm:ss]',
     async execute(client, message, args) {
         // Checks
@@ -11,7 +12,6 @@ module.exports = {
 
         const { voice } = message.member;
         if (!voice || voice.channelID !== player.voiceChannel.id) return message.channel.send("You're not in the same voice channel as the bot")
-        if (!args || args.length === 0) return message.channel.send("You didn't give me a time.")
 
         const isValid = (time) => {
             console.log(time)
