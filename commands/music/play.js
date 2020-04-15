@@ -68,7 +68,7 @@ module.exports = {
               (m) => {
                 return (
                   m.author.id === message.author.id &&
-                  new RegExp(`^([1-5]|cancel])$`, 'i').test(m.content)
+                  new RegExp(`^([1-5]|cancel)$`, 'i').test(m.content)
                 );
               },
               { time: 30000, max: 1 }
@@ -112,14 +112,5 @@ module.exports = {
         }
       })
       .catch((err) => message.channel.send(err.message));
-
-    // const URL = args[0].toLowerCase();
-    // const connection = await voiceChannel.join();
-    // // const stream = ytdl(`'${URL}'`, {
-    // //   filter: 'audioonly',
-    // // });
-
-    // const dispatcher = connection.play(stream);
-    // dispatcher.on('end', () => voiceChannel.leave());
   },
 };

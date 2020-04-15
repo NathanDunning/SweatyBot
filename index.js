@@ -16,8 +16,8 @@ const load = (dirs) => {
   for (let file of commands) {
     let command = require(`./commands/${dirs}/${file}`);
     client.commands.set(command.name, command);
-    if (command.alias)
-      command.alias.forEach((alias) => client.aliases.set(alias, command.name));
+    if (command.aliases)
+      command.aliases.forEach((alias) => client.commands.set(alias, command));
   }
 };
 ['miscellaneous', 'moderation', 'music'].forEach((f) => load(f));
@@ -41,10 +41,6 @@ client.once('ready', () => {
       `Now playing: **${title}** \`${Utils.formatTime(duration, true)}\``
     )
   );
-  client.music.on('queueEnd', (player) => {
-    player.textChannel.send('Queue has ended.');
-    client.music.players.destroy(player.guild.id);
-  });
 
   client.levels = new Map()
     .set('none', 0.0)
@@ -82,9 +78,12 @@ client.on('message', (message) => {
         .catch((err) => {
           console.error(er);
         });
-      message.author.send(
-        'Please use the command channel for anything bot related'
-      );
+
+      if (!message.author.bot) {
+        message.author.send(
+          'Please use the command channel for anything bot related'
+        );
+      }
     }
     // Execute command block
     else {
