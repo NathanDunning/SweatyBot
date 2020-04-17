@@ -64,7 +64,7 @@ client.on('message', (message) => {
     message.author.bot
   ) {
     // Check message in correct channgel
-    if (message.channel.id === testgeneral) {
+    if (message.channel.id === textChannels.testgeneral) {
       message
         .delete()
         .then(
