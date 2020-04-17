@@ -9,6 +9,8 @@ module.exports = {
 
         const voiceChannel = message.member.voice.channel
         voiceChannel.join().then(connection => {
+            connection.on('debug', console.log);
+
             const dispatcher = connection.play('../../sound_slices/capitalism.mp3')
 
             dispatcher.on('finish', () => {
