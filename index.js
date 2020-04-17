@@ -1,7 +1,8 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const { prefix } = require('./config.json');
-const { testgeneral, testcommands } = require('./channels.js');
+const textChannels = require('./config/channels.js');
+const { welcome } = require('./config/config.js');
 const { ErelaClient, Utils } = require('erela.js');
 const fs = require('fs');
 require('dotenv').config();
@@ -30,18 +31,18 @@ const nodes = [{ host: 'localhost', port: 2333, password: 'youshallnotpass' }];
 client.once('ready', () => {
   console.log('Ready!');
 
-  // Initialise Erela client
-  client.music = new ErelaClient(client, nodes);
-  // Event Listener
-  client.music.on('nodeConnect', () => console.log('New node connected'));
-  client.music.on('nodeError', (error) =>
-    console.log(`Node error: ${error.message}`)
-  );
-  client.music.on('trackStart', ({ textChannel }, { title, duration }) =>
-    textChannel.send(
-      `Now playing: **${title}** \`${Utils.formatTime(duration, true)}\``
-    )
-  );
+  // // Initialise Erela client
+  // client.music = new ErelaClient(client, nodes);
+  // // Event Listener
+  // client.music.on('nodeConnect', () => console.log('New node connected'));
+  // client.music.on('nodeError', (error) =>
+  //   console.log(`Node error: ${error.message}`)
+  // );
+  // client.music.on('trackStart', ({ textChannel }, { title, duration }) =>
+  //   textChannel.send(
+  //     `Now playing: **${title}** \`${Utils.formatTime(duration, true)}\``
+  //   )
+  // );
 
   client.levels = new Map()
     .set('none', 0.0)
@@ -54,6 +55,7 @@ client.login(process.env.DISCORD_CLIENT_TOKEN);
 
 client.on('ready', () => {
   console.info(`Logged in as ${client.user.tag}!`);
+  welcome(client);
 });
 
 // Message listener
