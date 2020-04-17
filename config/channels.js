@@ -1,0 +1,9 @@
+module.exports = {
+  welcome: '700617687415521280',
+  general: '244095507033489408',
+  commands: '259228078490910721',
+  testcommands: '694764131147972689',
+  testgeneral: '698760455191003176',
+  newmembers: '700618185933848576',
+  moderationchat: '700618271942115368'
+};

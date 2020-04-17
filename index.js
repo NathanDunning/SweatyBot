@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const { prefix, token } = require('./config.json');
-const { testgeneral, testcommands } = require('./channels.js');
+const textChannels = require('./config/channels.js');
 const { ErelaClient, Utils } = require('erela.js');
 const fs = require('fs');
 
@@ -53,9 +53,6 @@ client.login(token);
 
 client.on('ready', () => {
   console.info(`Logged in as ${client.user.tag}!`);
-  // const channel = client.channels.cache.get(testcommands);
-  // if (channel) channel.send('ready');
-  // else console.error('Unable to find channel with id:', testingtext);
 });
 
 // Message listener
