@@ -54,9 +54,6 @@ client.login(process.env.DISCORD_CLIENT_TOKEN);
 
 client.on('ready', () => {
   console.info(`Logged in as ${client.user.tag}!`);
-  // const channel = client.channels.cache.get(testcommands);
-  // if (channel) channel.send('ready');
-  // else console.error('Unable to find channel with id:', testingtext);
 });
 
 // Message listener
