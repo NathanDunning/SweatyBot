@@ -23,10 +23,11 @@ const load = (dirs) => {
 ['miscellaneous', 'moderation', 'music'].forEach((f) => load(f));
 
 // Initiate client
+client.login(token);
 client.once('ready', async () => {
   // Connect to DB
   await configHandler.startDBConnection().then(res => console.log("Successfuly connected to DB")).catch(err => console.log(err));
-  await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
+  // await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
 
   // Set levels
   client.levels = new Map()
@@ -36,14 +37,11 @@ client.once('ready', async () => {
     .set('high', 0.25);
   configHandler.welcome(client);
 
+  console.info(`Logged in as ${client.user.tag}!`);
   console.log('Ready!');
 });
 
-client.login(token);
 
-client.on('ready', () => {
-  console.info(`Logged in as ${client.user.tag}!`);
-});
 
 // Message listener
 client.on('message', (message) => {

@@ -53,12 +53,130 @@ async function welcome(client) {
 async function messageReactionAdd(client, messageReaction, user) {
   console.log(messageReaction.emoji.name);
   console.log(user.id);
+
+  //TODO: Implement timeout with promise.race
+
+  function sleep(ms) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  async function newUserSetup() {
+    async function ProcessAffiliate(message) {
+      const guildMembers = await client.guilds.cache
+        .get('244095507033489408')
+        .members.fetch();
+      guildMembers.array().forEach((member) => {
+        if (member.user.tag === message.last().content) console.log('match!');
+      });
+    }
+    function ProcessName(message) {
+      data.set('Name', message.content);
+    }
+    function ProcessSurname(message) {
+      data.set('Surname', message.content);
+    }
+    function ProcessNistie(message) {
+      message.content.toLowerCase() === 'yes'
+        ? data.set('Nistie', true)
+        : data.set('Nistie', false);
+    }
+    function ProcessGradYear(message) {
+      data.set('Gradyear', message.content);
+    }
+    function ProcessError(err) {
+      console.log(err);
+    }
+
+    const data = new Map();
+    const dmChannel = await user.createDM();
+    await dmChannel.send(`
+      Thanks for accepting the rules for **The Server**.\nI just need to ask you a few simple questions as I need update our map of members and affiliates.
+    `);
+    // await sleep(4000)
+
+    await dmChannel.send(
+      `1. Enter the discord id of the person who invited you. (eg. Sweaty Bot#9890)`
+    );
+    await dmChannel
+      .awaitMessages(
+        (m) => {
+          return !m.author.bot;
+        },
+        { max: 1, time: 60000, errors: ['time'] }
+      )
+      .then(ProcessAffiliate)
+      .catch(ProcessError);
+
+    await dmChannel.send(`2. What is your first name?`);
+    await dmChannel
+      .awaitMessages(
+        (m) => {
+          return !m.author.bot;
+        },
+        { max: 1, time: 60000, errors: ['time'] }
+      )
+      .then(ProcessName)
+      .catch(ProcessError);
+
+    await dmChannel.send(`3. What is your last name?`);
+    await dmChannel
+      .awaitMessages(
+        (m) => {
+          return !m.author.bot;
+        },
+        { max: 1, time: 60000, errors: ['time'] }
+      )
+      .then(ProcessSurname)
+      .catch(ProcessError);
+
+    await dmChannel.send(`4. Are you a Nistie?`);
+    await dmChannel
+      .awaitMessages(
+        (m) => {
+          return !m.author.bot;
+        },
+        { max: 1, time: 60000, errors: ['time'] }
+      )
+      .then(ProcessNistie)
+      .catch(ProcessError);
+
+    if (data.get('Nistie')) {
+      await dmChannel.send(`5. What was your graduation year?`);
+      await dmChannel
+        .awaitMessages(
+          (m) => {
+            return !m.author.bot;
+          },
+          { max: 1, time: 60000, errors: ['time'] }
+        )
+        .then(ProcessName)
+        .catch(ProcessError);
+    }
+  }
+
+  //TODO: Can add some cache before accessing db
+
+  // Check if user is in system
+  const query = `SELECT user_id FROM users WHERE user_id = $1`;
+  db.query(query, [user.id])
+    .then((res) => {
+      if (res.rows.length) {
+        // User in system, do something else
+        console.log('data returned');
+      } else {
+        // Do new user set up
+        newUserSetup();
+        // TODO: Process Bool before db insert
+      }
+    })
+    .catch((err) => {
+      console.error(err.stack);
+    });
 }
 
-async function messageReactionRemove(client, messageReaction, user) {
-  console.log(messageReaction.emoji.name);
-  console.log(user.id);
-}
+async function messageReactionRemove(client, messageReaction, user) {}
 
 module.exports = {
   startDBConnection: startDBConnection,
