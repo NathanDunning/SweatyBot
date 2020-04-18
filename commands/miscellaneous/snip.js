@@ -12,9 +12,11 @@ module.exports = {
         // voiceChannel.join().then(connection => {
         //     connection.on('debug', console.log);
 
+        //     console.log("Audio starting...")
         //     const dispatcher = connection.play(fs.createReadStream('../../sound_slices/capitalism.ogg', { type: 'ogg/opus' }))
 
         //     dispatcher.on('finish', () => {
+        //         console.log('Finished playing')
         //         voiceChannel.leave();
         //     })
         // }).catch(e => console.error(e));
