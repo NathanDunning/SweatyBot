@@ -11,6 +11,10 @@ async function startDBConnection() {
   return db.connect();
 }
 
+async function dbQuery(query) {
+  return db.query(query)
+}
+
 async function initialiseErela(client) {
   // Nodes for Erela.js
   const nodes = [
@@ -87,6 +91,7 @@ async function messageReactionAdd(client, messageReaction, user) {
     }
     function ProcessError(err) {
       console.log(err);
+      return dmChannel.send("Sorry but an error occured, please let a mod know")
     }
 
     const data = new Map();
@@ -250,6 +255,7 @@ async function messageReactionRemove(client, messageReaction, user) { }
 
 module.exports = {
   startDBConnection: startDBConnection,
+  dbQuery: dbQuery,
   initialiseErela: initialiseErela,
   welcome: welcome,
   messageReactionAdd: messageReactionAdd,
