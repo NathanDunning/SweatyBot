@@ -53,27 +53,8 @@ client.on('message', (message) => {
     message.content.startsWith('!') ||
     message.author.bot
   ) {
-    // Check message in correct channgel
-    if (message.channel.id === textChannels.testgeneral) {
-      message
-        .delete()
-        .then(
-          console.log(
-            `Deleted message from ${message.author.username}(${message.author.id})`
-          )
-        )
-        .catch((err) => {
-          console.error(er);
-        });
-
-      if (!message.author.bot) {
-        message.author.send(
-          'Please use the command channel for anything bot related'
-        );
-      }
-    }
-    // Execute command block
-    else {
+    // Check message in correct channel
+    if (message.channel.id === textChannels.commands || message.channel.id === textChannels.testcommands || message.channel.type === "dm") {
       // Split args and command
       const args = message.content.slice(prefix.length).split(/ +/);
       const commandName = args.shift().toLowerCase();
@@ -104,6 +85,25 @@ client.on('message', (message) => {
       } catch (error) {
         console.error(error);
         message.reply(`There was an error executing: ${command}`);
+      }
+    }
+    // Execute command block
+    else {
+      message
+        .delete()
+        .then(
+          console.log(
+            `Deleted message from ${message.author.username}(${message.author.id})`
+          )
+        )
+        .catch((err) => {
+          console.error(er);
+        });
+
+      if (!message.author.bot) {
+        message.author.send(
+          'Please use the command channel for anything bot related'
+        );
       }
     }
   }
