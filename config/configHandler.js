@@ -54,8 +54,6 @@ async function messageReactionAdd(client, messageReaction, user) {
   console.log(messageReaction.emoji.name);
   console.log(user.id);
 
-  //TODO: Implement timeout with promise.race
-
   function sleep(ms) {
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
@@ -64,26 +62,39 @@ async function messageReactionAdd(client, messageReaction, user) {
 
   async function newUserSetup() {
     async function ProcessAffiliate(message) {
+      const response = message.last().content;
+      let matched = false;
+
+      // Fetch all guild members
       const guildMembers = await client.guilds.cache
         .get('244095507033489408')
         .members.fetch();
-      guildMembers.array().forEach((member) => {
-        if (member.user.tag === message.last().content) console.log('match!');
+
+      // Check if affiliate is found in guild
+      const affiliate = guildMembers.array().filter((member) => {
+        return member.user.tag === response;
       });
+
+      // Process
+      if (affiliate) {
+        data.set('Affiliate', affiliate);
+      } else {
+        throw new Error(`Unable to find user: ${response}`);
+      }
     }
     function ProcessName(message) {
-      data.set('Name', message.content);
+      data.set('Name', message.last().content);
     }
     function ProcessSurname(message) {
-      data.set('Surname', message.content);
+      data.set('Surname', message.last().content);
     }
     function ProcessNistie(message) {
-      message.content.toLowerCase() === 'yes'
+      message.last().content.toLowerCase() === 'yes'
         ? data.set('Nistie', true)
         : data.set('Nistie', false);
     }
     function ProcessGradYear(message) {
-      data.set('Gradyear', message.content);
+      data.set('Gradyear', message.last().content);
     }
     function ProcessError(err) {
       console.log(err);
@@ -131,7 +142,7 @@ async function messageReactionAdd(client, messageReaction, user) {
       .then(ProcessSurname)
       .catch(ProcessError);
 
-    await dmChannel.send(`4. Are you a Nistie?`);
+    await dmChannel.send(`4. Are you a Nistie? [yes/no]`);
     await dmChannel
       .awaitMessages(
         (m) => {
@@ -151,9 +162,11 @@ async function messageReactionAdd(client, messageReaction, user) {
           },
           { max: 1, time: 60000, errors: ['time'] }
         )
-        .then(ProcessName)
+        .then(ProcessGradYear)
         .catch(ProcessError);
     }
+
+    console.log(data.values());
   }
 
   //TODO: Can add some cache before accessing db
