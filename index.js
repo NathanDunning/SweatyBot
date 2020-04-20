@@ -27,7 +27,7 @@ client.login(token);
 client.once('ready', async () => {
   // Connect to DB
   await configHandler.startDBConnection().then(res => console.log("Successfuly connected to DB")).catch(err => console.log(err));
-  await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
+  //await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
 
   // Set levels
   client.levels = new Map()
@@ -45,16 +45,13 @@ client.once('ready', async () => {
 
 // Message listener
 client.on('message', (message) => {
-
   // Check for prefixed message or bot message
   if (
-    message.content.startsWith(prefix) ||
-    message.content.startsWith('!') ||
-    message.author.bot
+    message.content.startsWith(prefix) || message.channel.type === "dm"
   ) {
     // Check message in correct channel
     const sentChannel = Object.values(textChannels).filter(channel => (message.channel.id === channel.id)).map(x => x.botAllow)
-    if (sentChannel[0] || message.channel.type === "dm") {
+    if (sentChannel[0]) {
       // Split args and command
       const args = message.content.slice(prefix.length).split(/ +/);
       const commandName = args.shift().toLowerCase();
@@ -96,24 +93,23 @@ client.on('message', (message) => {
         message.reply(`There was an error executing: ${command}`);
       }
     }
-    // Execute command block
-    else {
-      message
-        .delete()
-        .then(
-          console.log(
-            `Deleted message from ${message.author.username}(${message.author.id})`
-          )
+  } else if (message.content.startsWith('!') || message.author.bot) {
+    const allowedChannelID = Object.values(textChannels).filter(channel => channel.botAllow).map(x => x.id)
+    if (!allowedChannelID.includes(message.channel.id)) {
+      message.delete().then(
+        console.log(
+          `Deleted message from ${message.author.username}(${message.author.id})`
         )
-        .catch((err) => {
-          console.error(er);
-        });
+      ).catch((err) => {
+        console.error(er);
+      });
 
       if (!message.author.bot) {
         message.author.send(
           'Please use the command channel for anything bot related'
         );
       }
+
     }
   }
 });
