@@ -39,7 +39,7 @@ async function initialiseErela(client) {
 }
 
 async function welcome(client) {
-  const channel = client.channels.cache.get(`${textChannels.rules}`);
+  const channel = client.channels.cache.get(`${textChannels.rules.id}`);
 
   // Adding message to cache
   const message = await channel.messages.fetch('700857567705956444');
@@ -66,9 +66,7 @@ async function messageReactionAdd(client, messageReaction, user) {
       const response = message.last().content;
 
       // Fetch all guild members
-      const guildMembers = await client.guilds.cache
-        .get('244095507033489408')
-        .members.fetch();
+      const guildMembers = await guild.members.fetch();
 
       // Check if affiliate is found in guild
       return guildMembers.array().filter((member) => {
@@ -87,16 +85,14 @@ async function messageReactionAdd(client, messageReaction, user) {
         : data.set('Nistie', false);
     }
     function ProcessGradYear(message) {
-      data.set('Gradyear', message.last().content);
+      data.set('Gradyear', Number(message.last().content));
     }
     function ProcessError(err) {
       console.log(err);
       return dmChannel.send("Sorry but an error occured, please let a mod know")
     }
 
-    const data = new Map();
-    const dmChannel = await user.createDM();
-
+    // FIXME: Fix timeout error
     // Affiliate
     await dmChannel.send(`
       Thanks for accepting the rules for **The Server**.\nI just need to ask you a few simple questions as I need update our map of members and affiliates.
@@ -115,7 +111,7 @@ async function messageReactionAdd(client, messageReaction, user) {
 
       // Process
       if (affiliate.length) {
-        data.set('Affiliate', affiliate);
+        data.set('Affiliate', affiliate[0]);
       } else {
         await dmChannel.send(`Unable to find user`);
       }
@@ -146,7 +142,7 @@ async function messageReactionAdd(client, messageReaction, user) {
       .catch(ProcessError);
 
     // Nistie
-    await dmChannel.send(`4. Are you a Nistie? [yes/no]`);
+    await dmChannel.send(`4. Are you a Nistie? [yes/no] (If you don't know what this is please answer 'no')`);
     await dmChannel
       .awaitMessages(
         (m) => {
@@ -206,36 +202,48 @@ async function messageReactionAdd(client, messageReaction, user) {
         text: 'INSERT into users(user_id, discord_tag, name, surname, nistie) VALUES ($1, $2, $3, $4, $5)',
         values: [user.id, user.tag, data.get("Name"), data.get("Surname"), data.get("Nistie")]
       }
-
-      await db.query(insertUsers).then(res => {
-        console.log(res.rows[0])
-        // Insert Affiliate
-        const insertAffiliate = {
-          text: 'INSERT into affiliate(user_id, affiliate_id) VALUES ($1, $2)',
-          values: [user.id, data.get("Affiliate")]
-        }
-        return db.query(insertAffiliate)
-      }).then(res => {
-        console.log(res.rows[0])
-      }).catch(err => { console.error(err) })
-
     }
+
+    // DB Insert
+    await db.query(insertUsers).then(res => {
+      console.log(`Inserted: ${insertUsers.values}`)
+      // Insert Affiliate
+      const insertAffiliate = {
+        text: 'INSERT into affiliate(user_id, affiliate_id) VALUES ($1, $2)',
+        values: [data.get("Affiliate").id, user.id]
+      }
+      console.log(`Inserting: ${insertAffiliate.values}`)
+      return db.query(insertAffiliate)
+    }).catch(err => { console.error(err) })
   }
 
   async function AssignVerified() {
-    console.log("Assign here")
+    const guildMember = guild.member(user)
+    if (guildMember) {
+      await guildMember.roles.add('700609994772578365')
+      console.log(`Adding role: 700609994772578365 to user: ${user.id}`)
+      dmChannel.send("Thank you for registering, enjoy **The Server**. 👍")
+      client.channels.fetch(textChannels.newmembers.id).then(channel => {
+        channel.send(`:wave: **New Verified:** :wave:\n**Nickname:** ${guildMember.nickname}\n**Discord Tag:** ${user.tag}\n**Name:** ${data.get("Name")} ${data.get("Surname")}\n**Is Nistie:** ${data.get("Nistie")}\n**Invited by:** ${data.get("Affiliate")}`)
+      })
+    }
   }
 
   //TODO: Can add some cache before accessing db
+  const dmChannel = await user.createDM();
+  const guild = await client.guilds.cache.get('244095507033489408')
+  const data = new Map();
 
   // Check if user is in system
   if (messageReaction.emoji.name === '👍') {
+    if (user.bot) return;
+
     const query = `SELECT user_id FROM users WHERE user_id = $1`;
     db.query(query, [user.id])
       .then((res) => {
         if (res.rows.length) {
           // User in system, do something else assign role
-          console.log('data returned');
+          console.log('User in system, do something');
         } else {
           // Do new user set up
           newUserSetup()

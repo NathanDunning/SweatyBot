@@ -27,7 +27,7 @@ client.login(token);
 client.once('ready', async () => {
   // Connect to DB
   await configHandler.startDBConnection().then(res => console.log("Successfuly connected to DB")).catch(err => console.log(err));
-  // await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
+  await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
 
   // Set levels
   client.levels = new Map()
@@ -45,6 +45,7 @@ client.once('ready', async () => {
 
 // Message listener
 client.on('message', (message) => {
+
   // Check for prefixed message or bot message
   if (
     message.content.startsWith(prefix) ||
@@ -52,7 +53,8 @@ client.on('message', (message) => {
     message.author.bot
   ) {
     // Check message in correct channel
-    if (message.channel.id === textChannels.commands || message.channel.id === textChannels.testcommands || message.channel.type === "dm") {
+    const sentChannel = Object.values(textChannels).filter(channel => (message.channel.id === channel.id)).map(x => x.botAllow)
+    if (sentChannel[0] || message.channel.type === "dm") {
       // Split args and command
       const args = message.content.slice(prefix.length).split(/ +/);
       const commandName = args.shift().toLowerCase();
@@ -60,6 +62,15 @@ client.on('message', (message) => {
       // Check valid command
       if (!client.commands.has(commandName)) return;
       const command = client.commands.get(commandName);
+
+      // Check permissions
+      if (command.permissions) {
+        let hasPermissions = false;
+        command.permissions.forEach(perm => {
+          if (message.member.roles.cache.has(perm)) hasPermissions = true
+        })
+        if (!hasPermissions) return message.channel.send("You do not have the permissions for this command")
+      }
 
       // Check guild only command
       if (command.guildOnly && message.channel.type !== 'text') {
