@@ -19,8 +19,8 @@ module.exports = {
         unregistered.forEach(user => { reply += `${user}, ` })
         reply += `\n**Note:** Not registering may result in not being able to see future channels`
 
-        client.channels.fetch(textChannels.general.id).then(channel => {
-            channel.send(reply)
+        client.channels.fetch(textChannels.testcommands.id).then(channel => {
+            channel.send(reply);
         })
     },
 };
