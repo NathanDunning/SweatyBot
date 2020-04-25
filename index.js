@@ -27,8 +27,16 @@ const load = (dirs) => {
 client.login(token);
 client.once('ready', async () => {
   // Connect to DB
-  await configHandler.startDBConnection().then(res => console.log("Successfuly connected to DB")).catch(err => console.log(err));
-  //await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
+  await configHandler
+    .startDBConnection()
+    .then((res) => console.log('Successfuly connected to DB'))
+    .catch((err) => console.log(err));
+  await configHandler
+    .initialiseErela(client)
+    .then((res) => console.log(res))
+    .catch((err) => {
+      console.log(err);
+    });
 
   // Set levels
   client.levels = new Map()
@@ -44,16 +52,15 @@ client.once('ready', async () => {
 
 client.login(process.env.DISCORD_CLIENT_TOKEN);
 
-
 // Message listener
 client.on('message', (message) => {
   // Check for prefixed message or bot message
-  if (
-    message.content.startsWith(prefix) || message.channel.type === "dm"
-  ) {
+  if (message.content.startsWith(prefix) || message.channel.type === 'dm') {
     // Check message in correct channel
-    const sentChannel = Object.values(textChannels).filter(channel => (message.channel.id === channel.id)).map(x => x.botAllow)
-    if (sentChannel[0]) {
+    const sentChannel = Object.values(textChannels)
+      .filter((channel) => message.channel.id === channel.id)
+      .map((x) => x.botAllow);
+    if (sentChannel[0] || message.channel.type === 'dm') {
       // Split args and command
       const args = message.content.slice(prefix.length).split(/ +/);
       const commandName = args.shift().toLowerCase();
@@ -65,10 +72,13 @@ client.on('message', (message) => {
       // Check permissions
       if (command.permissions) {
         let hasPermissions = false;
-        command.permissions.forEach(perm => {
-          if (message.member.roles.cache.has(perm)) hasPermissions = true
-        })
-        if (!hasPermissions) return message.channel.send("You do not have the permissions for this command")
+        command.permissions.forEach((perm) => {
+          if (message.member.roles.cache.has(perm)) hasPermissions = true;
+        });
+        if (!hasPermissions)
+          return message.channel.send(
+            'You do not have the permissions for this command'
+          );
       }
 
       // Check guild only command
@@ -94,33 +104,56 @@ client.on('message', (message) => {
         console.error(error);
         message.reply(`There was an error executing: ${command}`);
       }
-    }
-  } else if (message.content.startsWith('!') || message.author.bot) {
-    const allowedChannelID = Object.values(textChannels).filter(channel => channel.botAllow).map(x => x.id)
-    if (!allowedChannelID.includes(message.channel.id)) {
-      message.delete().then(
-        console.log(
-          `Deleted message from ${message.author.username}(${message.author.id})`
+    } else {
+      message
+        .delete()
+        .then(
+          console.log(
+            `Deleted message from ${message.author.username}(${message.author.id})`
+          )
         )
-      ).catch((err) => {
-        console.error(er);
-      });
+        .catch((err) => {
+          console.error(er);
+        });
 
       if (!message.author.bot) {
         message.author.send(
           'Please use the command channel for anything bot related'
         );
       }
+    }
+  }
+  if (message.content.startsWith('!') || message.author.bot) {
+    const allowedChannelID = Object.values(textChannels)
+      .filter((channel) => channel.botAllow)
+      .map((x) => x.id);
+    if (!allowedChannelID.includes(message.channel.id)) {
+      const messageContent = message.content;
+      message
+        .delete()
+        .then(
+          console.log(
+            `Deleted message from ${message.author.username}(${message.author.id})`
+          )
+        )
+        .catch((err) => {
+          console.error(er);
+        });
 
+      if (!message.author.bot) {
+        message.author.send(
+          'Please use the command channel for anything bot related'
+        );
+      }
     }
   }
 });
 
 // Message reaction listener
 client.on('messageReactionAdd', (messageReaction, user) => {
-  configHandler.messageReactionAdd(client, messageReaction, user)
-})
+  configHandler.messageReactionAdd(client, messageReaction, user);
+});
 
 client.on('messageReactionRemove', (messageReaction, user) => {
-  configHandler.messageReactionRemove(client, messageReaction, user)
-})
+  configHandler.messageReactionRemove(client, messageReaction, user);
+});
