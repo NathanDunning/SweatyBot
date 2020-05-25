@@ -6,7 +6,8 @@ module.exports = {
         // Checks
         const player = client.music.players.get(message.guild.id)
         const { voice } = message.member;
-        console.log(message, player, voice)
+        console.log("voiceChannelID: " + voice.channelID)
+        console.log("playerVoiceChannelID: " + player.voiceChannel.id)
 
         if (!player) return message.channel.send("No songs currently playing")
         if (!voice || voice.channelID !== player.voiceChannel.id) return message.channel.send("You're not in the same voice channel as the bot")
