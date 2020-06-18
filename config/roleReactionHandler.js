@@ -1,36 +1,41 @@
-const { ErelaClient, Utils } = require('erela.js');
-const { pgconfig } = require('../config.json');
-const { Client } = require('pg');
 const textChannels = require('./channels.js');
+const { ReactionCollector } = require('discord.js');
 
-async function roleReactionHandler(client, messageReaction, user) {
-    const guild = await client.guilds.cache.get('244095507033489408')
+async function reactionAdd(client, messageReaction, user) {
+  if (user.bot) return;
+  if (messageReaction.message.channel.id !== '722970514070700032') return;
 
-    // Check if user is in system
-    // if (messageReaction.emoji.name === ':dota2:') {
-    //     console.log('yeet')
-    //     // if (user.bot) return;
+  // Extract vars/cast
+  const guild = await client.guilds.cache.get('244095507033489408');
+  const guildMember = guild.member(user);
 
-    //     // const query = `SELECT user_id FROM users WHERE user_id = $1`;
-    //     // db.query(query, [user.id])
-    //     //     .then((res) => {
-    //     //         if (res.rows.length) {
-    //     //             // User in system, do something else assign role
-    //     //             console.log('User in system, do something');
-    //     //         } else {
-    //     //             // Do new user set up
-    //     //             newUserSetup()
-    //     //                 .then(StoreUserData)
-    //     //                 .then(AssignVerified)
-    //     //                 .catch(err => console.error(err));
-    //     //         }
-    //     //     })
-    //     //     .catch((err) => {
-    //     //         console.error(err.stack);
-    //     //     });
-    // }
+  if (messageReaction.message.id === '722972576384679976') {
+    switch (messageReaction.emoji.name) {
+      case 'Dota2':
+        await guildMember.roles.add('723007379028967483');
+        console.log(`Assigning Dota 2 to ${user.id}`);
+    }
+  }
+}
+
+async function reactionRemove(client, messageReaction, user) {
+  if (user.bot) return;
+  if (messageReaction.message.channel.id !== '722970514070700032') return;
+
+  // Extract vars/cast
+  const guild = await client.guilds.cache.get('244095507033489408');
+  const guildMember = guild.member(user);
+
+  if (messageReaction.message.id === '722972576384679976') {
+    switch (messageReaction.emoji.name) {
+      case 'Dota2':
+        await guildMember.roles.remove('723007379028967483');
+        console.log(`Removing Dota 2 from ${user.id}`);
+    }
+  }
 }
 
 module.exports = {
-    roleReactionHandler: roleReactionHandler
-}
+  reactionAdd: reactionAdd,
+  reactionRemove: reactionRemove,
+};

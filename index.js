@@ -1,9 +1,12 @@
 const Discord = require('discord.js');
 const client = new Discord.Client();
 const { prefix } = require('./config.json');
+const client = new Discord.Client({
+  partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+});
 const textChannels = require('./config/channels.js');
 const configHandler = require('./config/configHandler.js');
-const roleHandler = require('./config/roleReactionHandler.js')
+const roleHandler = require('./config/roleReactionHandler.js');
 const fs = require('fs');
 require('dotenv').config();
 
@@ -25,10 +28,13 @@ const load = (dirs) => {
 ['miscellaneous', 'moderation', 'music'].forEach((f) => load(f));
 
 // Initiate client
-client.login(token);
+client.login(process.env.DISCORD_CLIENT_TOKEN);
 client.once('ready', async () => {
   // Connect to DB
-  await configHandler.startDBConnection().then(res => console.log("Successfuly connected to DB")).catch(err => console.log(err));
+  await configHandler
+    .startDBConnection()
+    .then((res) => console.log('Successfuly connected to DB'))
+    .catch((err) => console.log(err));
   // await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
 
   // Set levels
@@ -37,16 +43,15 @@ client.once('ready', async () => {
   //   .set('low', 0.1)
   //   .set('medium', 0.15)
   //   .set('high', 0.25);
-  // configHandler.welcome(client);
 
+  configHandler.welcome(client);
   console.info(`Logged in as ${client.user.tag}!`);
   console.log('Ready!');
 });
 
-client.login(process.env.DISCORD_CLIENT_TOKEN);
-
 // Message listener
 client.on('message', (message) => {
+  if (message.partial) return;
   // Check for prefixed message or bot message
   if (message.content.startsWith(prefix) || message.channel.type === 'dm') {
     // Check message in correct channel
@@ -144,14 +149,13 @@ client.on('message', (message) => {
 
 // TODO: Can make this more convenient when more listeners added
 // Message reaction listener
-client.on('messageReactionAdd', (messageReaction, user) => {
+client.on('messageReactionAdd', async (messageReaction, user) => {
+  if (messageReaction.message.partial) await messageReaction.message.fetch();
   configHandler.messageReactionAdd(client, messageReaction, user);
+  roleHandler.reactionAdd(client, messageReaction, user);
 });
-
-client.on('messageReactionAdd', (messageReaction, user) => {
-  configHandler.role(client, messageReaction, user)
-})
 
 client.on('messageReactionRemove', (messageReaction, user) => {
   configHandler.messageReactionRemove(client, messageReaction, user);
+  roleHandler.reactionRemove(client, messageReaction, user);
 });
