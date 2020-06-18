@@ -2,6 +2,7 @@ const { ErelaClient, Utils } = require('erela.js');
 const { pgconfig } = require('../config.json');
 const { Client } = require('pg');
 const textChannels = require('./channels.js');
+const emojis = require('./emojis.js');
 
 // DB Client
 var db;
@@ -12,7 +13,7 @@ async function startDBConnection() {
 }
 
 async function dbQuery(query) {
-  return db.query(query)
+  return db.query(query);
 }
 
 async function initialiseErela(client) {
@@ -39,18 +40,39 @@ async function initialiseErela(client) {
 }
 
 async function welcome(client) {
-  const channel = client.channels.cache.get(`${textChannels.rules.id}`);
+  const rulesChannel = client.channels.cache.get(`${textChannels.rules.id}`);
+  const roleReactChannel = client.channels.cache.get(
+    `${textChannels.rolereact.id}`
+  );
 
   // Adding message to cache
-  const message = await channel.messages.fetch('700857567705956444');
+  const welcomeMessage = await rulesChannel.messages.fetch(
+    '700857567705956444'
+  );
+  const gameRoleMessage = await roleReactChannel.messages.fetch(
+    '722972576384679976'
+  );
 
-  // Check reaction
-  const reactionCache = message.reactions.cache;
-  if (!reactionCache.get('👍')) {
-    await message.react('👍');
+  // Check rules reaction
+  const welcomeReactionCache = welcomeMessage.reactions.cache;
+  if (!welcomeReactionCache.get('👍')) {
+    await welcomeMessage.react('👍');
+    return;
   }
-  if (!reactionCache.get('👍').me) {
-    await message.react('👍');
+  if (!welcomeReactionCache.get('👍').me) {
+    await welcomeMessage.react('👍');
+  }
+
+  // Check roles reaction
+  const d2emoji = gameRoleMessage.guild.emojis.cache.get(`${emojis.dota2}`);
+  const roleReactionCache = gameRoleMessage.reactions.cache;
+
+  if (!roleReactionCache.get(`${emojis.dota2}`)) {
+    await gameRoleMessage.react(d2emoji);
+    return;
+  }
+  if (!roleReactionCache.get(`${emojis.dota2}`).me) {
+    await gameRoleMessage.react(d2emoji);
   }
 }
 
@@ -89,7 +111,9 @@ async function messageReactionAdd(client, messageReaction, user) {
     }
     function ProcessError(err) {
       console.log(err);
-      return dmChannel.send("Sorry but an error occured, please let a mod know")
+      return dmChannel.send(
+        'Sorry but an error occured, please let a mod know'
+      );
     }
 
     // FIXME: Fix timeout error
@@ -97,17 +121,21 @@ async function messageReactionAdd(client, messageReaction, user) {
     await dmChannel.send(`
       Thanks for accepting the rules for **The Server**.\nI just need to ask you a few simple questions as I need update our map of members and affiliates.
     `);
-    await sleep(4000)
+    await sleep(4000);
 
     let affiliate;
     while (!affiliate || affiliate.length === 0) {
       await dmChannel.send(
         `1. Enter the discord id of the person who invited you. Left click on their profile to find the id (eg. Sweaty Bot#9890)`
       );
-      affiliate = await dmChannel.awaitMessages((m) => {
-        return !m.author.bot;
-      }, { max: 1, time: 60000, errors: ['time'] }
-      ).then(ProcessAffiliate)
+      affiliate = await dmChannel
+        .awaitMessages(
+          (m) => {
+            return !m.author.bot;
+          },
+          { max: 1, time: 60000, errors: ['time'] }
+        )
+        .then(ProcessAffiliate);
 
       // Process
       if (affiliate.length) {
@@ -142,7 +170,9 @@ async function messageReactionAdd(client, messageReaction, user) {
       .catch(ProcessError);
 
     // Nistie
-    await dmChannel.send(`4. Are you a Nistie? [yes/no] (If you don't know what this is please answer 'no')`);
+    await dmChannel.send(
+      `4. Are you a Nistie? [yes/no] (If you don't know what this is please answer 'no')`
+    );
     await dmChannel
       .awaitMessages(
         (m) => {
@@ -167,71 +197,119 @@ async function messageReactionAdd(client, messageReaction, user) {
     }
 
     // Process response
-    const gradYearResponse = data.get("Gradyear");
-    var reply = `Your response was:\nAffiliate: **${data.get("Affiliate")}**\nName: **${data.get("Name")}**\nSurname: **${data.get("Surname")}**\nNistie: **${data.get("Nistie")}**\n`
+    const gradYearResponse = data.get('Gradyear');
+    var reply = `Your response was:\nAffiliate: **${data.get(
+      'Affiliate'
+    )}**\nName: **${data.get('Name')}**\nSurname: **${data.get(
+      'Surname'
+    )}**\nNistie: **${data.get('Nistie')}**\n`;
 
     if (gradYearResponse) {
-      reply += `Graduation Year: **${gradYearResponse}**`
+      reply += `Graduation Year: **${gradYearResponse}**`;
       insertUsers = {
-        text: 'INSERT into users(user_id, discord_tag, name, surname, nistie, grad_year) VALUES ($1, $2, $3, $4, $5, $6)',
-        values: [user.id, user.tag, data.get("Name"), data.get("Surname"), data.get("Nistie"), gradYearResponse]
-      }
+        text:
+          'INSERT into users(user_id, discord_tag, name, surname, nistie, grad_year) VALUES ($1, $2, $3, $4, $5, $6)',
+        values: [
+          user.id,
+          user.tag,
+          data.get('Name'),
+          data.get('Surname'),
+          data.get('Nistie'),
+          gradYearResponse,
+        ],
+      };
     } else {
       insertUsers = {
-        text: 'INSERT into users(user_id, discord_tag, name, surname, nistie) VALUES ($1, $2, $3, $4, $5)',
-        values: [user.id, user.tag, data.get("Name"), data.get("Surname"), data.get("Nistie")]
-      }
+        text:
+          'INSERT into users(user_id, discord_tag, name, surname, nistie) VALUES ($1, $2, $3, $4, $5)',
+        values: [
+          user.id,
+          user.tag,
+          data.get('Name'),
+          data.get('Surname'),
+          data.get('Nistie'),
+        ],
+      };
     }
-    dmChannel.send(reply)
-    dmChannel.send("Saving your response...")
+    dmChannel.send(reply);
+    dmChannel.send('Saving your response...');
     return data;
   }
 
   async function StoreUserData(data) {
     // Insert Users
     var insertUsers;
-    const gradYearResponse = data.get("Gradyear");
+    const gradYearResponse = data.get('Gradyear');
 
     if (gradYearResponse) {
       insertUsers = {
-        text: 'INSERT into users(user_id, discord_tag, name, surname, nistie, grad_year) VALUES ($1, $2, $3, $4, $5, $6)',
-        values: [user.id, user.tag, data.get("Name"), data.get("Surname"), data.get("Nistie"), gradYearResponse]
-      }
+        text:
+          'INSERT into users(user_id, discord_tag, name, surname, nistie, grad_year) VALUES ($1, $2, $3, $4, $5, $6)',
+        values: [
+          user.id,
+          user.tag,
+          data.get('Name'),
+          data.get('Surname'),
+          data.get('Nistie'),
+          gradYearResponse,
+        ],
+      };
     } else {
       insertUsers = {
-        text: 'INSERT into users(user_id, discord_tag, name, surname, nistie) VALUES ($1, $2, $3, $4, $5)',
-        values: [user.id, user.tag, data.get("Name"), data.get("Surname"), data.get("Nistie")]
-      }
+        text:
+          'INSERT into users(user_id, discord_tag, name, surname, nistie) VALUES ($1, $2, $3, $4, $5)',
+        values: [
+          user.id,
+          user.tag,
+          data.get('Name'),
+          data.get('Surname'),
+          data.get('Nistie'),
+        ],
+      };
     }
 
     // DB Insert
-    await db.query(insertUsers).then(res => {
-      console.log(`Inserted: ${insertUsers.values}`)
-      // Insert Affiliate
-      const insertAffiliate = {
-        text: 'INSERT into affiliate(user_id, affiliate_id) VALUES ($1, $2)',
-        values: [data.get("Affiliate").id, user.id]
-      }
-      console.log(`Inserting: ${insertAffiliate.values}`)
-      return db.query(insertAffiliate)
-    }).catch(err => { console.error(err) })
+    await db
+      .query(insertUsers)
+      .then((res) => {
+        console.log(`Inserted: ${insertUsers.values}`);
+        // Insert Affiliate
+        const insertAffiliate = {
+          text: 'INSERT into affiliate(user_id, affiliate_id) VALUES ($1, $2)',
+          values: [data.get('Affiliate').id, user.id],
+        };
+        console.log(`Inserting: ${insertAffiliate.values}`);
+        return db.query(insertAffiliate);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }
 
   async function AssignVerified() {
-    const guildMember = guild.member(user)
+    const guildMember = guild.member(user);
     if (guildMember) {
-      await guildMember.roles.add('700609994772578365')
-      console.log(`Adding role: 700609994772578365 to user: ${user.id}`)
-      dmChannel.send("Thank you for registering, enjoy **The Server**. 👍")
-      client.channels.fetch(textChannels.newmembers.id).then(channel => {
-        channel.send(`:wave: **New Verified:** :wave:\n**Nickname:** ${guildMember.nickname}\n**Discord Tag:** ${user.tag}\n**Name:** ${data.get("Name")} ${data.get("Surname")}\n**Is Nistie:** ${data.get("Nistie")}\n**Invited by:** ${data.get("Affiliate")}`)
-      })
+      await guildMember.roles.add('700609994772578365');
+      console.log(`Adding role: 700609994772578365 to user: ${user.id}`);
+      dmChannel.send('Thank you for registering, enjoy **The Server**. 👍');
+      client.channels.fetch(textChannels.newmembers.id).then((channel) => {
+        channel.send(
+          `:wave: **New Verified:** :wave:\n**Nickname:** ${
+            guildMember.nickname
+          }\n**Discord Tag:** ${user.tag}\n**Name:** ${data.get(
+            'Name'
+          )} ${data.get('Surname')}\n**Is Nistie:** ${data.get(
+            'Nistie'
+          )}\n**Invited by:** ${data.get('Affiliate')}`
+        );
+      });
     }
   }
 
   //TODO: Can add some cache before accessing db
+  if (messageReaction.message.channel.id !== '700850602023845971') return;
   const dmChannel = await user.createDM();
-  const guild = await client.guilds.cache.get('244095507033489408')
+  const guild = await client.guilds.cache.get('244095507033489408');
   const data = new Map();
 
   // Check if user is in system
@@ -249,7 +327,7 @@ async function messageReactionAdd(client, messageReaction, user) {
           newUserSetup()
             .then(StoreUserData)
             .then(AssignVerified)
-            .catch(err => console.error(err));
+            .catch((err) => console.error(err));
         }
       })
       .catch((err) => {
@@ -258,8 +336,7 @@ async function messageReactionAdd(client, messageReaction, user) {
   }
 }
 
-
-async function messageReactionRemove(client, messageReaction, user) { }
+async function messageReactionRemove(client, messageReaction, user) {}
 
 module.exports = {
   startDBConnection: startDBConnection,

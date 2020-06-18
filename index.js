@@ -1,9 +1,11 @@
 const Discord = require('discord.js');
-const client = new Discord.Client();
+const client = new Discord.Client({
+  partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+});
 const { prefix, token } = require('./config.json');
 const textChannels = require('./config/channels.js');
 const configHandler = require('./config/configHandler.js');
-const roleHandler = require('./config/roleReactionHandler.js')
+const roleHandler = require('./config/roleReactionHandler.js');
 const fs = require('fs');
 
 // Command handling
@@ -27,7 +29,10 @@ const load = (dirs) => {
 client.login(token);
 client.once('ready', async () => {
   // Connect to DB
-  await configHandler.startDBConnection().then(res => console.log("Successfuly connected to DB")).catch(err => console.log(err));
+  await configHandler
+    .startDBConnection()
+    .then((res) => console.log('Successfuly connected to DB'))
+    .catch((err) => console.log(err));
   // await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
 
   // Set levels
@@ -36,21 +41,22 @@ client.once('ready', async () => {
   //   .set('low', 0.1)
   //   .set('medium', 0.15)
   //   .set('high', 0.25);
-  // configHandler.welcome(client);
 
+  configHandler.welcome(client);
   console.info(`Logged in as ${client.user.tag}!`);
   console.log('Ready!');
 });
 
 // Message listener
 client.on('message', (message) => {
+  if (message.partial) return;
   // Check for prefixed message or bot message
-  if (
-    message.content.startsWith(prefix) || message.channel.type === "dm"
-  ) {
+  if (message.content.startsWith(prefix) || message.channel.type === 'dm') {
     // Check message in correct channel
-    const sentChannel = Object.values(textChannels).filter(channel => (message.channel.id === channel.id)).map(x => x.botAllow)
-    if (sentChannel[0] || message.channel.type === "dm") {
+    const sentChannel = Object.values(textChannels)
+      .filter((channel) => message.channel.id === channel.id)
+      .map((x) => x.botAllow);
+    if (sentChannel[0] || message.channel.type === 'dm') {
       // Split args and command
       const args = message.content.slice(prefix.length).split(/ +/);
       const commandName = args.shift().toLowerCase();
@@ -62,10 +68,13 @@ client.on('message', (message) => {
       // Check permissions
       if (command.permissions) {
         let hasPermissions = false;
-        command.permissions.forEach(perm => {
-          if (message.member.roles.cache.has(perm)) hasPermissions = true
-        })
-        if (!hasPermissions) return message.channel.send("You do not have the permissions for this command")
+        command.permissions.forEach((perm) => {
+          if (message.member.roles.cache.has(perm)) hasPermissions = true;
+        });
+        if (!hasPermissions)
+          return message.channel.send(
+            'You do not have the permissions for this command'
+          );
       }
 
       // Check guild only command
@@ -92,13 +101,16 @@ client.on('message', (message) => {
         message.reply(`There was an error executing: ${command}`);
       }
     } else {
-      message.delete().then(
-        console.log(
-          `Deleted message from ${message.author.username}(${message.author.id})`
+      message
+        .delete()
+        .then(
+          console.log(
+            `Deleted message from ${message.author.username}(${message.author.id})`
+          )
         )
-      ).catch((err) => {
-        console.error(er);
-      });
+        .catch((err) => {
+          console.error(er);
+        });
 
       if (!message.author.bot) {
         message.author.send(
@@ -108,37 +120,40 @@ client.on('message', (message) => {
     }
   }
   if (message.content.startsWith('!') || message.author.bot) {
-    const allowedChannelID = Object.values(textChannels).filter(channel => channel.botAllow).map(x => x.id)
+    const allowedChannelID = Object.values(textChannels)
+      .filter((channel) => channel.botAllow)
+      .map((x) => x.id);
     if (!allowedChannelID.includes(message.channel.id)) {
-      const messageContent = message.content
-      message.delete().then(
-        console.log(
-          `Deleted message from ${message.author.username}(${message.author.id})`
+      const messageContent = message.content;
+      message
+        .delete()
+        .then(
+          console.log(
+            `Deleted message from ${message.author.username}(${message.author.id})`
+          )
         )
-      ).catch((err) => {
-        console.error(er);
-      });
+        .catch((err) => {
+          console.error(er);
+        });
 
       if (!message.author.bot) {
         message.author.send(
           'Please use the command channel for anything bot related'
         );
       }
-
     }
   }
 });
 
 // TODO: Can make this more convenient when more listeners added
 // Message reaction listener
-client.on('messageReactionAdd', (messageReaction, user) => {
-  configHandler.messageReactionAdd(client, messageReaction, user)
-})
-
-client.on('messageReactionAdd', (messageReaction, user) => {
-  configHandler.role(client, messageReaction, user)
-})
+client.on('messageReactionAdd', async (messageReaction, user) => {
+  if (messageReaction.message.partial) await messageReaction.message.fetch();
+  configHandler.messageReactionAdd(client, messageReaction, user);
+  roleHandler.reactionAdd(client, messageReaction, user);
+});
 
 client.on('messageReactionRemove', (messageReaction, user) => {
-  configHandler.messageReactionRemove(client, messageReaction, user)
-})
+  configHandler.messageReactionRemove(client, messageReaction, user);
+  roleHandler.reactionRemove(client, messageReaction, user);
+});
