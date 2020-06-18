@@ -3,6 +3,7 @@ const client = new Discord.Client();
 const { prefix, token } = require('./config.json');
 const textChannels = require('./config/channels.js');
 const configHandler = require('./config/configHandler.js');
+const roleHandler = require('./config/roleReactionHandler.js')
 const fs = require('fs');
 
 // Command handling
@@ -27,15 +28,15 @@ client.login(token);
 client.once('ready', async () => {
   // Connect to DB
   await configHandler.startDBConnection().then(res => console.log("Successfuly connected to DB")).catch(err => console.log(err));
-  await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
+  // await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
 
   // Set levels
-  client.levels = new Map()
-    .set('none', 0.0)
-    .set('low', 0.1)
-    .set('medium', 0.15)
-    .set('high', 0.25);
-  configHandler.welcome(client);
+  // client.levels = new Map()
+  //   .set('none', 0.0)
+  //   .set('low', 0.1)
+  //   .set('medium', 0.15)
+  //   .set('high', 0.25);
+  // configHandler.welcome(client);
 
   console.info(`Logged in as ${client.user.tag}!`);
   console.log('Ready!');
@@ -70,13 +71,13 @@ client.on('message', (message) => {
       // Check guild only command
       if (command.guildOnly && message.channel.type !== 'text') {
         return message.reply(
-          "You sneaky pan, I can't execute that command inside DMs!"
+          "Sneaky.... But I can't execute that command inside DMs!"
         );
       }
 
       // Check command args
       if (command.args && !args.length) {
-        let reply = `${message.author} you sala pan, I can't execute that with no arguments \n`;
+        let reply = `${message.author}, I can't execute that with no arguments \n`;
         if (command.usage) {
           reply += `The proper usage would be: \`${prefix}${command.name} ${command.usage}\``;
         }
@@ -128,9 +129,14 @@ client.on('message', (message) => {
   }
 });
 
+// TODO: Can make this more convenient when more listeners added
 // Message reaction listener
 client.on('messageReactionAdd', (messageReaction, user) => {
   configHandler.messageReactionAdd(client, messageReaction, user)
+})
+
+client.on('messageReactionAdd', (messageReaction, user) => {
+  configHandler.role(client, messageReaction, user)
 })
 
 client.on('messageReactionRemove', (messageReaction, user) => {
