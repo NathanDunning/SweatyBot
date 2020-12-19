@@ -1,14 +1,19 @@
 const { ErelaClient, Utils } = require('erela.js');
-const { pgconfig } = require('../config.json');
 const { Client } = require('pg');
 const textChannels = require('./channels.js');
 const emojis = require('./emojis.js');
+require('dotenv').config();
 
 // DB Client
 var db;
 
 async function startDBConnection() {
-  db = new Client(pgconfig);
+  db = new Client({
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+  });
   return db.connect();
 }
 
@@ -16,28 +21,29 @@ async function dbQuery(query) {
   return db.query(query);
 }
 
-async function initialiseErela(client) {
-  // Nodes for Erela.js
-  const nodes = [
-    { host: 'localhost', port: 2333, password: 'youshallnotpass' },
-  ];
+//FIXME: Remove this - save formatting
+// async function initialiseErela(client) {
+//   // Nodes for Erela.js
+//   const nodes = [
+//     { host: 'localhost', port: 2333, password: 'youshallnotpass' },
+//   ];
 
-  return new Promise((resolve, reject) => {
-    // Initialise Erela client
-    client.music = new ErelaClient(client, nodes);
+//   return new Promise((resolve, reject) => {
+//     // Initialise Erela client
+//     client.music = new ErelaClient(client, nodes);
 
-    // Add Event Listener
-    client.music.on('nodeConnect', () => resolve('New node connected'));
-    client.music.on('nodeError', (error) =>
-      reject(`Node error: ${error.message}`)
-    );
-    client.music.on('trackStart', ({ textChannel }, { title, duration }) =>
-      textChannel.send(
-        `Now playing: **${title}** \`${Utils.formatTime(duration, true)}\``
-      )
-    );
-  });
-}
+//     // Add Event Listener
+//     client.music.on('nodeConnect', () => resolve('New node connected'));
+//     client.music.on('nodeError', (error) =>
+//       reject(`Node error: ${error.message}`)
+//     );
+//     client.music.on('trackStart', ({ textChannel }, { title, duration }) =>
+//       textChannel.send(
+//         `Now playing: **${title}** \`${Utils.formatTime(duration, true)}\``
+//       )
+//     );
+//   });
+// }
 
 async function welcome(client) {
   const rulesChannel = client.channels.cache.get(`${textChannels.rules.id}`);
@@ -341,7 +347,6 @@ async function messageReactionRemove(client, messageReaction, user) {}
 module.exports = {
   startDBConnection: startDBConnection,
   dbQuery: dbQuery,
-  initialiseErela: initialiseErela,
   welcome: welcome,
   messageReactionAdd: messageReactionAdd,
   messageReactionRemove: messageReactionRemove,
