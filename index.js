@@ -29,18 +29,10 @@ const load = (dirs) => {
 client.login(token);
 client.once('ready', async () => {
   // Connect to DB
-  await configHandler
-    .startDBConnection()
-    .then((res) => console.log('Successfuly connected to DB'))
-    .catch((err) => console.log(err));
-  // await configHandler.initialiseErela(client).then(res => console.log(res)).catch(err => { console.log(err) })
-
-  // Set levels
-  // client.levels = new Map()
-  //   .set('none', 0.0)
-  //   .set('low', 0.1)
-  //   .set('medium', 0.15)
-  //   .set('high', 0.25);
+  // await configHandler
+  //   .startDBConnection()
+  //   .then((res) => console.log('Successfuly connected to DB'))
+  //   .catch((err) => console.log(err));
 
   configHandler.welcome(client);
   console.info(`Logged in as ${client.user.tag}!`);
