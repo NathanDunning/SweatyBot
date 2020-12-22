@@ -24,7 +24,7 @@ const load = (dirs) => {
       command.aliases.forEach((alias) => client.commands.set(alias, command));
   }
 };
-['miscellaneous', 'moderation', 'music', 'market'].forEach((f) => load(f));
+['miscellaneous', 'moderation', 'market'].forEach((f) => load(f));
 
 // Initiate client
 client.login(process.env.DISCORD_CLIENT_TOKEN);
