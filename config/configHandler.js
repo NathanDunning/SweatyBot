@@ -21,28 +21,14 @@ async function dbQuery(query) {
 }
 
 async function welcome(client) {
-  const rulesChannel = client.channels.cache.get(`${textChannels.rules.id}`);
   const roleReactChannel = client.channels.cache.get(
     `${textChannels.rolereact.id}`
   );
 
-  // Adding message to cache
-  const welcomeMessage = await rulesChannel.messages.fetch(
-    '700857567705956444'
-  );
+
   const gameRoleMessage = await roleReactChannel.messages.fetch(
     '722972576384679976'
   );
-
-  // Check rules reaction
-  const welcomeReactionCache = welcomeMessage.reactions.cache;
-  if (!welcomeReactionCache.get('👍')) {
-    await welcomeMessage.react('👍');
-    return;
-  }
-  if (!welcomeReactionCache.get('👍').me) {
-    await welcomeMessage.react('👍');
-  }
 
   // Check roles reaction
   const d2emoji = gameRoleMessage.guild.emojis.cache.get(`${emojis.dota2}`);
