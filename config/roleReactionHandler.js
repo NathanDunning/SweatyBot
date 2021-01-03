@@ -1,6 +1,3 @@
-const textChannels = require('./channels.js');
-const { ReactionCollector } = require('discord.js');
-
 async function reactionAdd(client, messageReaction, user) {
   if (user.bot) return;
   if (messageReaction.message.channel.id !== '722970514070700032') return;
