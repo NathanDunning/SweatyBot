@@ -29,7 +29,43 @@ data "aws_iam_role" "ecsTaskExecutionRole" {
   name = "ecsTaskExecutionRole"
 }
 
+data "aws_subnet" "a" {
+  id = "subnet-a8e400ce"
+}
+
+data "aws_subnet" "b" {
+  id = "subnet-0a899f43"
+}
+
+data "aws_subnet" "c" {
+  id = "subnet-36a93e6e"
+}
+
+data "aws_security_group" "default" {
+  id = "sg-fad4008b"
+}
+
 # -- RESOURCES -- #
+resource "aws_ecs_service" "sweatybot" {
+  name                               = "SweatyBot"
+  cluster                            = data.aws_ecs_cluster.sweatybot.id
+  task_definition                    = aws_ecs_task_definition.sweatybot.arn
+  desired_count                      = 1
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
+  enable_ecs_managed_tags            = true
+  force_new_deployment               = true
+  launch_type                        = "FARGATE"
+  propagate_tags                     = "TASK_DEFINITION"
+  wait_for_steady_state              = true
+
+  network_configuration {
+    subnets          = [data.aws_subnet.a.id, data.aws_subnet.b.id, data.aws_subnet.c.id]
+    security_groups  = [data.aws_security_group.default.id]
+    assign_public_ip = true
+  }
+}
+
 resource "aws_ecs_task_definition" "sweatybot" {
   family                = "sweatybot"
   container_definitions = <<TASK_DEFINITION
