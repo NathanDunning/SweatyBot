@@ -25,9 +25,8 @@ async function welcome(client) {
     `${textChannels.rolereact.id}`
   );
 
-
   const gameRoleMessage = await roleReactChannel.messages.fetch(
-    '722972576384679976'
+    textChannels.rolereact.messages.roles
   );
 
   // Check roles reaction
