@@ -1,7 +1,6 @@
 terraform {
   backend "s3" {
     bucket         = "terraform-state-backend-manager"
-    key            = "sweatybot.tfstate"
     region         = "ap-southeast-2"
     dynamodb_table = "terraform-state-locking"
     encrypt        = true
@@ -82,7 +81,15 @@ resource "aws_ecs_task_definition" "sweatybot" {
           "awslogs-stream-prefix": "ecs"
         }
       },
-      "memoryReservation": 128
+      "memoryReservation": 128,
+      "environment": [
+        {
+          "DISCORD_CLIENT_TOKEN": "${var.discord_client_token}",
+          "PSQL_HOST": "${var.psql_host}",
+          "PSQL_USERNAME": "${var.psql_username}",
+          "PSQL_PASSWORD": "${var.psql_password}",
+        }
+      ]
     }
   ]
   TASK_DEFINITION

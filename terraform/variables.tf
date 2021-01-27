@@ -1,16 +1,23 @@
-variable "ami_ubuntu" {
-  type        = string
-  description = "Ubuntu 20.04 LTS x64_86 AMI"
-}
-
-variable "instance_type" {
-  type = string
-}
-
 variable "account_id" {
   type = string
 }
 
-variable "region" {
-  type = string
+variable "discord_client_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "psql_host" {
+  type      = string
+  sensitive = true
+}
+
+variable "psql_username" {
+  type      = string
+  sensitive = true
+}
+
+variable "psql_password" {
+  type      = string
+  sensitive = true
 }
