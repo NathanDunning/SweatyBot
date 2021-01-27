@@ -20,10 +20,6 @@ provider "aws" {
 
 
 # -- DATA -- #
-data "aws_ecs_cluster" "sweatybot" {
-  cluster_name = "sweatybot-cluster"
-}
-
 data "aws_iam_role" "ecsTaskExecutionRole" {
   name = "ecsTaskExecutionRole"
 }
@@ -44,10 +40,18 @@ data "aws_security_group" "default" {
   id = "sg-fad4008b"
 }
 
+data "aws_ecr_repository" "sweatybot" {
+  name = "sweatybot"
+}
+
 # -- RESOURCES -- #
+resource "aws_ecs_cluster" "sweatybot" {
+  name = "sweatybot-cluster"
+}
+
 resource "aws_ecs_service" "sweatybot" {
   name                               = "SweatyBot"
-  cluster                            = data.aws_ecs_cluster.sweatybot.id
+  cluster                            = aws_ecs_cluster.sweatybot.id
   task_definition                    = aws_ecs_task_definition.sweatybot.arn
   desired_count                      = 1
   deployment_maximum_percent         = 200
@@ -63,11 +67,15 @@ resource "aws_ecs_service" "sweatybot" {
     security_groups  = [data.aws_security_group.default.id]
     assign_public_ip = true
   }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_ecs_task_definition" "sweatybot" {
   family                = "sweatybot"
-  container_definitions = <<TASK_DEFINITION
+  container_definitions = <<-TASK_DEFINITION
   [
     {
       "name": "sweatybot",
@@ -84,10 +92,20 @@ resource "aws_ecs_task_definition" "sweatybot" {
       "memoryReservation": 128,
       "environment": [
         {
-          "DISCORD_CLIENT_TOKEN": "${var.discord_client_token}",
-          "PSQL_HOST": "${var.psql_host}",
-          "PSQL_USERNAME": "${var.psql_username}",
-          "PSQL_PASSWORD": "${var.psql_password}",
+          "name": "DISCORD_CLIENT_TOKEN",
+          "value": "${var.discord_client_token}"
+        },
+        {
+          "name": "PSQL_HOST",
+          "value": "${var.psql_host}"
+        },
+        {
+          "name": "PSQL_USERNAME", 
+          "value": "${var.psql_username}"
+        },
+        {
+          "name": "PSQL_PASSWORD",
+          "value": "${var.psql_password}"
         }
       ]
     }
@@ -99,4 +117,28 @@ resource "aws_ecs_task_definition" "sweatybot" {
   cpu                      = "256"
   memory                   = "512"
   requires_compatibilities = ["FARGATE"]
+}
+
+resource "aws_ecr_lifecycle_policy" "foopolicy" {
+  repository = data.aws_ecr_repository.sweatybot.name
+
+  policy = <<-EOF
+  {
+      "rules": [
+          {
+              "rulePriority": 1,
+              "description": "Expire images older than 1 days",
+              "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 1
+              },
+              "action": {
+                  "type": "expire"
+              }
+          }
+      ]
+  }
+  EOF
 }
