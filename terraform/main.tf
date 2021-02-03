@@ -67,10 +67,6 @@ resource "aws_ecs_service" "sweatybot" {
     security_groups  = [data.aws_security_group.default.id]
     assign_public_ip = true
   }
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 resource "aws_ecs_task_definition" "sweatybot" {

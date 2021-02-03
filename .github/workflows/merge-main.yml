@@ -2,6 +2,9 @@ name: 'Merge Main'
 
 # Run this workflow on a pull request to main
 on:
+  push:
+    branches:
+      - ecs-pipeline-fail-hotfix 
   pull_request:
     types:
       - closed
@@ -11,7 +14,7 @@ on:
 jobs:
   build:
     name: Build
-    if: github.event.pull_request.merged == true
+    # if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
