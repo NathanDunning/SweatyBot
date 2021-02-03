@@ -71,3 +71,4 @@ jobs:
           TF_VAR_psql_host: ${{ secrets.PSQL_HOST }}
           TF_VAR_psql_username: ${{ secrets.PSQL_USERNAME }}
           TF_VAR_psql_password: ${{ secrets.PSQL_PASSWORD }}
+          TF_VAR_RUN_ID: ${{ github.run_id }}

@@ -21,3 +21,7 @@ variable "psql_password" {
   type      = string
   sensitive = true
 }
+
+variable "RUN_ID" {
+  type = string
+}

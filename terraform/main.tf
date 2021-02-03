@@ -50,7 +50,7 @@ resource "aws_ecs_cluster" "sweatybot" {
 }
 
 resource "aws_ecs_service" "sweatybot" {
-  name                               = "SweatyBot"
+  name                               = "SweatyBot-${var.RUN_ID}"
   cluster                            = aws_ecs_cluster.sweatybot.id
   task_definition                    = aws_ecs_task_definition.sweatybot.arn
   desired_count                      = 1
