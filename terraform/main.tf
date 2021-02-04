@@ -98,13 +98,16 @@ resource "aws_ecs_task_definition" "sweatybot" {
       ],
       "secrets": [
         {
-          "DISCORD_CLIENT_TOKEN": "${var.discord_client_token}"
+          "name": "DISCORD_CLIENT_TOKEN",
+          "value": "${var.discord_client_token}"
         },
         {
-          "PSQL_HOST": "${var.psql_host}"
+          "name": "PSQL_HOST",
+          "value": "${var.psql_host}"
         },
         {
-          "PSQL_PASSWORD": "${var.psql_password}"
+          "name": "PSQL_PASSWORD",
+          "value": "${var.psql_password}"
         }
       ]
     }
