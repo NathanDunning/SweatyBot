@@ -2,6 +2,9 @@ name: 'Merge Main'
 
 # Run this workflow on a pull request to main
 on:
+  push:
+    branches:
+      - move-sensitive-env
   pull_request:
     types:
       - closed

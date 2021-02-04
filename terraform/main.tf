@@ -92,20 +92,19 @@ resource "aws_ecs_task_definition" "sweatybot" {
       "memoryReservation": 128,
       "environment": [
         {
-          "name": "DISCORD_CLIENT_TOKEN",
-          "value": "${var.discord_client_token}"
-        },
-        {
-          "name": "PSQL_HOST",
-          "value": "${var.psql_host}"
-        },
-        {
           "name": "PSQL_USERNAME", 
           "value": "${var.psql_username}"
         },
+      ],
+      "secrets": [
         {
-          "name": "PSQL_PASSWORD",
-          "value": "${var.psql_password}"
+          "DISCORD_CLIENT_TOKEN": "${var.discord_client_token}"
+        },
+        {
+          "PSQL_HOST": "${var.psql_host}"
+        },
+        {
+          "PSQL_PASSWORD": "${var.psql_password}"
         }
       ]
     }
