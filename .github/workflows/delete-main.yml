@@ -1,0 +1,34 @@
+name: "Delete Main"
+
+# Run this workflow on a pull request to main
+on: workflow_dispatch
+
+jobs:
+  delete:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-southeast-2
+
+      - name: Terraform Init
+        run: terraform init -backend-config="key=$GITHUB_REF.tfstate" -input=false
+        working-directory: terraform
+
+      - name: Terraform Apply
+        run: terraform destroy -auto-approve
+        working-directory: terraform
+        env:
+          TF_VAR_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+          TF_VAR_discord_client_token: ${{ secrets.DISCORD_CLIENT_TOKEN }}
+          TF_VAR_psql_host: ${{ secrets.PSQL_HOST }}
+          TF_VAR_psql_username: ${{ secrets.PSQL_USERNAME }}
+          TF_VAR_psql_password: ${{ secrets.PSQL_PASSWORD }}
+          TF_VAR_RUN_ID: ${{ github.run_id }}
